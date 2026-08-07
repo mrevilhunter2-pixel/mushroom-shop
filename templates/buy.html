@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f4f6f8; padding: 20px 10px; }
+        .box { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 10px; margin: 8px 0 15px; border: 1px solid #ccc; border-radius: 6px; }
+        button { width: 100%; background: #2e7d32; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .payment-box { display: none; background: #f1f8e9; padding: 15px; border-radius: 8px; border: 1px dashed #2e7d32; margin-bottom: 15px; text-align: center; }
+        .qr-img { width: 180px; height: 180px; margin: 10px 0; border: 2px solid #ddd; padding: 5px; background: white; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>Order Confirmation</h2>
+        <p><b>Product:</b> {{ product[1] }}</p>
+        <p><b>Unit Price:</b> ₹<span id="unit-price">{{ product[5] }}</span></p>
+
+        {% if flat_discount > 0 %}
+            <p style="color: #d32f2f;"><b>Coupon '{{ applied_coupon }}' Applied: ₹{{ flat_discount }} Discount!</b></p>
+        {% endif %}
+
+        <p style="font-size: 18px; color: #2e7d32;"><b>Total Bill: ₹<span id="total-amount">{{ product[5] - flat_discount }}</span></b></p>
+        <hr>
+
+        <form action="/buy/{{ product[0] }}" method="GET" style="display:flex; gap:8px; margin-bottom:15px;">
+            <input type="text" name="coupon" placeholder="Coupon Code (e.g. FIRST10)" value="{{ applied_coupon }}" style="margin:0;">
+            <button type="submit" style="width: auto; background:#1976d2;">Apply</button>
+        </form>
+
+        <form action="/buy/{{ product[0] }}" method="POST">
+            <input type="hidden" name="coupon_used" value="{{ applied_coupon }}">
+
+            <label>Full Name:</label>
+            <input type="text" name="customer_name" required placeholder="Aapka Naam">
+
+            <label>Mobile Number:</label>
+            <input type="tel" name="phone" required placeholder="Mobile Number">
+
+            <label>Quantity:</label>
+            <input type="number" id="qty" name="quantity" value="1" min="1" required onchange="updateTotal()">
+
+            <label>Delivery Address:</label>
+            <input type="text" name="address" required placeholder="Address">
+
+            <label>Payment Method:</label>
+            <select name="payment_method" id="pay_method" onchange="togglePayment()">
+                <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
+                <option value="Online UPI / QR Code">Online UPI / QR Code</option>
+            </select>
+
+            <div id="upi-section" class="payment-box">
+                <h4>Scan & Pay</h4>
+                <p>UPI ID: <b>{{ upi_id }}</b></p>
+                <img id="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa={{ upi_id }}%26pn={{ shop_name }}%26am={{ product[5] - flat_discount }}%26cu=INR" class="qr-img">
+                <input type="text" name="transaction_id" placeholder="Enter UTR / Ref No.">
+            </div>
+
+            <button type="submit">Place Order 🚀</button>
+        </form>
+    </div>
+
+    <script>
+        const unitPrice = parseInt(document.getElementById('unit-price').innerText);
+        const flatDiscount = parseInt("{{ flat_discount }}") || 0;
+        const upiId = "{{ upi_id }}";
+        const shopName = "{{ shop_name }}";
+
+        function updateTotal() {
+            const qty = parseInt(document.getElementById('qty').value) || 1;
+            let total = (unitPrice * qty) - flatDiscount;
+            if (total < 0) total = 0;
+
+            document.getElementById('total-amount').innerText = total;
+
+            const upiUrl = `upi://pay?pa=${upiId}&pn=${shopName}&am=${total}&cu=INR`;
+            document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUrl)}`;
+        }
+
+        function togglePayment() {
+            const method = document.getElementById('pay_method').value;
+            document.getElementById('upi-section').style.display = (method === "Online UPI / QR Code") ? "block" : "none";
+        }
+    </script>
+
+</body>
+</html>
