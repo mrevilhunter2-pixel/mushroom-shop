@@ -62,8 +62,18 @@
             </div>
         {% else %}
             <p>Abhi koi order nahi mila hai.</p>
+            <!-- केवल Admin लॉगिन होने पर और Delivered/Cancelled ऑर्डर्स पर ही दिखेगा -->
+{% if session.get('is_admin') and (o[9] == 'Delivered 🎉' or o[9] == 'Cancelled ❌') %}
+<form action="/delete-order/{{ o[0] }}" method="POST" style="margin-top: 10px; border-top: 1px dashed #e57373; padding-top: 8px;">
+    <button type="submit" style="background: #c62828; color: white; border: none; border-radius: 4px; padding: 6px 12px; cursor: pointer;" onclick="return confirm('क्या आप इस ऑर्डर को permanently डिलीट करना चाहते हैं?');">
+        Delete Order 🗑️
+    </button>
+</form>
+{% endif %}
+
         {% endfor %}
     </div>
 
 </body>
-</html>
+    </html>
+
