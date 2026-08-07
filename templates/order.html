@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f4f6f8; margin: 0; padding: 0; }
+        nav { text-align: center; background: #1b5e20; padding: 12px; }
+        nav a { color: white; text-decoration: none; font-weight: bold; margin: 0 12px; }
+        .container { max-width: 600px; margin: 20px auto; padding: 15px; }
+        .order-card { background: white; padding: 15px; border-left: 5px solid #2e7d32; margin-bottom: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .badge { background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 14px; }
+        .pay-tag { background: #e3f2fd; color: #0d47a1; padding: 3px 6px; border-radius: 4px; font-size: 13px; font-weight: bold; }
+        select, button { padding: 6px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/">Home (Shop)</a>
+        <a href="/orders">Orders 📦</a>
+        <a href="/admin">Admin Panel ⚙️</a>
+    </nav>
+
+    <div class="container">
+        <h2>📦 Customer Orders</h2>
+        {% for o in orders %}
+            <div class="order-card">
+                <h3>Customer: {{ o[1] }} <span class="badge">{{ o[9] }}</span></h3>
+                <p><b>Phone:</b> 📞 {{ o[3] }}</p>
+                <p><b>Item:</b> {{ o[4] }} (Qty: {{ o[5] }})</p>
+                <p><b>Total Bill:</b> ₹{{ o[6] }}</p>
+                <p><b>Payment Mode:</b> <span class="pay-tag">{{ o[7] }}</span></p>
+                {% if o[8] and o[8] != 'N/A' %}
+                    <p style="color: #2e7d32;"><b>UTR / Transaction ID:</b> {{ o[8] }}</p>
+                {% endif %}
+                <p><b>Address:</b> {{ o[2] }}</p>
+                
+                <form action="/update-order/{{ o[0] }}" method="POST" style="margin-top: 10px;">
+                    <label><b>Change Status:</b></label>
+                    <select name="status">
+                        <option value="Pending" {% if o[9]=='Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Payment Verified ✅" {% if o[9]=='Payment Verified ✅' %}selected{% endif %}>Payment Verified ✅</option>
+                        <option value="Shipped 🚚" {% if o[9]=='Shipped 🚚' %}selected{% endif %}>Shipped 🚚</option>
+                        <option value="Delivered 🎉" {% if o[9]=='Delivered 🎉' %}selected{% endif %}>Delivered 🎉</option>
+                    </select>
+                    <button type="submit">Update Status</button>
+                </form>
+            </div>
+        {% else %}
+            <p>Abhi koi order nahi mila hai.</p>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
