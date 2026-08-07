@@ -254,6 +254,20 @@ def delete_product(product_id):
     conn.close()
     return redirect(url_for("admin"))
 
+@app.route("/update-order/<int:order_id>", methods=["POST"])
+def update_order(order_id):
+    admin_pin = request.form.get("admin_pin")
+    
+    if session.get("is_admin") or admin_pin == ADMIN_PASSWORD:
+        new_status = request.form.get("status")
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE orders SET status = ? WHERE id = ?", (new_status, order_id))
+        conn.commit()
+        conn.close()
+        
+    return redirect(url_for("orders"))
+    
 @app.route("/cancel-order/<int:order_id>", methods=["POST"])
 def cancel_order(order_id):
     conn = sqlite3.connect(db_path)
@@ -261,6 +275,18 @@ def cancel_order(order_id):
     cursor.execute("UPDATE orders SET status = 'Cancelled ❌' WHERE id = ?", (order_id,))
     conn.commit()
     conn.close()
+    return redirect(url_for("orders"))
+
+@app.route("/delete-order/<int:order_id>", methods=["POST"])
+def delete_order(order_id):
+    # केवल वही डिलीट कर पाएगा जो Admin Logged In है
+    if session.get("is_admin"):
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM orders WHERE id = ?", (order_id,))
+        conn.commit()
+        conn.close()
+        
     return redirect(url_for("orders"))
 
 @app.route("/orders")
@@ -274,3 +300,4 @@ def orders():
 
 if __name__ == "__main__":
     app.run(debug=True)
+    
