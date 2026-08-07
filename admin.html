@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f4f6f8; margin: 0; padding: 0; }
+        nav { text-align: center; background: #1b5e20; padding: 12px; }
+        nav a { color: white; text-decoration: none; font-weight: bold; margin: 0 12px; }
+        .container { max-width: 550px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input, textarea { width: 100%; padding: 10px; margin: 8px 0 12px; border: 1px solid #ccc; border-radius: 6px; }
+        button { background: #2e7d32; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .product-item { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; margin-bottom: 12px; border-radius: 8px; }
+        .flex-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+        .btn-delete { background: #d32f2f; }
+        .thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/">Home (Shop)</a>
+        <a href="/orders">Orders 📦</a>
+        <a href="/admin">Admin Panel ⚙️</a>
+    </nav>
+
+    <div class="container">
+        <h2>➕ Add New Mushroom with % Discount</h2>
+        <form action="/admin" method="POST">
+            <input type="text" name="name" placeholder="Mushroom Name & Weight" required>
+            <input type="number" name="original_price" placeholder="Original Price / MRP (₹)" required>
+            <input type="number" name="discount_percent" placeholder="Discount Percentage (e.g. 20 for 20%)" min="0" max="99" required>
+            <input type="url" name="image_url" placeholder="Photo URL (https://...)" required>
+            <textarea name="description" placeholder="Description..." required></textarea>
+            <button type="submit" style="width: 100%; padding: 12px;">Add Mushroom 🚀</button>
+        </form>
+
+        <hr style="margin: 25px 0;">
+
+        <h2>⚙️ Manage Discount & Prices</h2>
+        {% for p in products %}
+            <div class="product-item">
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <img src="{{ p[5] }}" class="thumb">
+                    <div>
+                        <h3 style="margin: 0;">{{ p[1] }}</h3>
+                        <p style="margin: 4px 0;">
+                            MRP: <del>₹{{ p[2] }}</del> | <b>Discount: {{ p[3] }}% OFF</b> | Selling Price: <b>₹{{ p[4] }}</b>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Update Discount Form -->
+                <form action="/update-price/{{ p[0] }}" method="POST" class="flex-row">
+                    <input type="number" name="new_original_price" value="{{ p[2] }}" placeholder="MRP" required style="width: 100px; margin: 0;">
+                    <input type="number" name="new_discount_percent" value="{{ p[3] }}" placeholder="Discount %" required style="width: 100px; margin: 0;">
+                    <button type="submit">Update Discount 🎯</button>
+                </form>
+
+                <!-- Delete Product Form -->
+                <form action="/delete-product/{{ p[0] }}" method="POST" style="margin-top: 8px;">
+                    <button type="submit" class="btn-delete">Delete Item 🗑️</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+
+</body>
+              </html>
+  
