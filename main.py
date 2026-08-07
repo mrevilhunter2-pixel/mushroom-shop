@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import os
 
@@ -6,6 +6,8 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(base_dir, 'templates')
 
 app = Flask(__name__, template_folder=template_dir)
+app.secret_key = "mushroom_super_secret_key"
+ADMIN_PASSWORD = "Ganesh1234me@711451"  # <--- यहाँ अपना मनपसंद पासवर्ड लिखें
 db_path = os.path.join(base_dir, 'mushroom_shop.db')
 
 MY_UPI_ID = "9057430791@ybl"
@@ -178,32 +180,56 @@ def buy(product_id):
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+    # 1. अगर पहले से लॉग-इन है
+    if session.get("is_admin"):
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
 
-    if request.method == "POST":
-        name = request.form.get("name")
-        category = request.form.get("category", "Fresh")
-        mrp = int(request.form.get("original_price"))
-        discount = int(request.form.get("discount_percent", 0))
-        image_url = request.form.get("image_url")
-        desc = request.form.get("description")
+        if request.method == "POST" and "name" in request.form:
+            name = request.form.get("name")
+            category = request.form.get("category", "Fresh")
+            mrp = int(request.form.get("original_price"))
+            discount = int(request.form.get("discount_percent", 0))
+            image_url = request.form.get("image_url")
+            desc = request.form.get("description")
+            final_price = int(mrp - (mrp * (discount / 100)))
 
-        final_price = int(mrp - (mrp * (discount / 100)))
+            cursor.execute("INSERT INTO products (name, category, original_price, discount_percent, final_price, image_url, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                           (name, category, mrp, discount, final_price, image_url, desc))
+            conn.commit()
+            return redirect(url_for("admin"))
 
-        cursor.execute("INSERT INTO products (name, category, original_price, discount_percent, final_price, image_url, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                       (name, category, mrp, discount, final_price, image_url, desc))
-        conn.commit()
-        return redirect(url_for("admin"))
+        cursor.execute("SELECT * FROM products")
+        products = cursor.fetchall()
+        cursor.execute("SELECT * FROM coupons")
+        coupons = cursor.fetchall()
+        conn.close()
+        return render_template("admin.html", products=products, coupons=coupons)
 
-    cursor.execute("SELECT * FROM products")
-    products = cursor.fetchall()
-    
-    cursor.execute("SELECT * FROM coupons")
-    coupons = cursor.fetchall()
+    # 2. अगर पासवर्ड सबमिट किया गया है
+    if request.method == "POST" and "admin_password" in request.form:
+        if request.form.get("admin_password") == ADMIN_PASSWORD:
+            session["is_admin"] = True
+            return redirect(url_for("admin"))
+        else:
+            return '''
+                <div style="text-align:center; margin-top:50px; font-family:sans-serif;">
+                    <h3 style="color:red;">गलत पासवर्ड!</h3>
+                    <a href="/admin">फिर से कोशिश करें</a>
+                </div>
+            '''
 
-    conn.close()
-    return render_template("admin.html", products=products, coupons=coupons)
+    # 3. पासवर्ड इनपुट फॉर्म (जब लॉग-इन न हो)
+    return '''
+        <div style="text-align:center; margin-top:80px; font-family:sans-serif;">
+            <h2>Admin Panel Login</h2>
+            <form method="post" style="margin-top:20px;">
+                <input type="password" name="admin_password" placeholder="Admin Password दर्ज करें" style="padding:10px; width:220px; font-size:16px;" required><br><br>
+                <button type="submit" style="padding:10px 20px; background:#2e7d32; color:white; border:none; border-radius:5px; font-size:16px; cursor:pointer;">Login</button>
+            </form>
+        </div>
+    '''
+
 
 @app.route("/update-price/<int:product_id>", methods=["POST"])
 def update_price(product_id):
@@ -249,3 +275,4 @@ def orders():
 
 if __name__ == "__main__":
     app.run(debug=True)
+    
