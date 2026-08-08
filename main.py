@@ -279,8 +279,10 @@ def cancel_order(order_id):
 
 @app.route("/delete-order/<int:order_id>", methods=["POST"])
 def delete_order(order_id):
-    # केवल वही डिलीट कर पाएगा जो Admin Logged In है
-    if session.get("is_admin"):
+    admin_pin = request.form.get("admin_pin")
+    
+    # Session लॉग-इन हो या Admin PIN सही हो, दोनों स्थिति में डिलीट होगा
+    if session.get("is_admin") or admin_pin == ADMIN_PASSWORD:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM orders WHERE id = ?", (order_id,))
@@ -288,6 +290,7 @@ def delete_order(order_id):
         conn.close()
         
     return redirect(url_for("orders"))
+    
 
 @app.route("/orders")
 def orders():
