@@ -169,7 +169,7 @@ def buy(product_id):
         conn.commit()
         conn.close()
 
-        return redirect(url_for("orders"))
+        return redirect(url_for("orders", phone=phone))
 
     cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
     product = cursor.fetchone()
@@ -291,15 +291,32 @@ def delete_order(order_id):
         
     return redirect(url_for("orders"))
     
-
-@app.route("/orders")
+@app.route("/orders", methods=["GET", "POST"])
 def orders():
+    phone_query = request.args.get("phone", "").strip()
+    
+    if request.method == "POST":
+        phone_query = request.form.get("phone", "").strip()
+
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM orders ORDER BY id DESC")
-    all_orders = cursor.fetchall()
+
+    # 1. अगर Admin लॉगिन है, तो उसको सारे ऑर्डर्स दिखेंगे
+    if session.get("is_admin"):
+        cursor.execute("SELECT * FROM orders ORDER BY id DESC")
+        all_orders = cursor.fetchall()
+        conn.close()
+        return render_template("orders.html", orders=all_orders, is_admin=True)
+
+    # 2. अगर कस्टमर ने फ़ोन नंबर दिया है, तो सिर्फ उसके ऑर्डर्स दिखेंगे
+    user_orders = []
+    if phone_query:
+        cursor.execute("SELECT * FROM orders WHERE phone = ? ORDER BY id DESC", (phone_query,))
+        user_orders = cursor.fetchall()
+
     conn.close()
-    return render_template("orders.html", orders=all_orders)
+    return render_template("orders.html", orders=user_orders, phone_searched=phone_query, is_admin=False)
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
