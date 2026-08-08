@@ -26,6 +26,16 @@
 
     <div class="container">
         <h2>📦 Customer Orders</h2>
+                <!-- Customer Search Box -->
+        {% if not is_admin %}
+        <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <form action="/orders" method="POST" style="display: flex; gap: 8px;">
+                <input type="tel" name="phone" placeholder="Enter your mobile number to find order" value="{{ phone_searched }}" style="flex: 1; padding: 8px;" required>
+                <button type="submit" style="background: #1b5e20; color: white; border: none; border-radius: 4px; padding: 8px 15px; cursor: pointer;">Search 🔍</button>
+            </form>
+        </div>
+        {% endif %}
+
         {% for o in orders %}
             <div class="order-card">
                 <h3>Customer: {{ o[1] }} <span class="badge">{{ o[9] }}</span></h3>
@@ -78,3 +88,5 @@
 
 </body>
 </html>
+
+Kya kya karna hai ab bataye step by step
