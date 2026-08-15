@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+             <!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
@@ -28,11 +28,14 @@
 
     <div class="container">
         <h2>➕ Add New Mushroom with % Discount</h2>
-        <form action="/admin" method="POST">
+        <form action="/admin" method="POST" enctype="multipart/form-data">
             <input type="text" name="name" placeholder="Mushroom Name & Weight" required>
             <input type="number" name="original_price" placeholder="Original Price / MRP (₹)" required>
             <input type="number" name="discount_percent" placeholder="Discount Percentage (e.g. 20 for 20%)" min="0" max="99" required>
-            <input type="url" name="image_url" placeholder="Photo URL (https://...)" required>
+            
+            <label style="font-weight: bold; font-size: 14px;">Product Photo (Gallery/Camera):</label>
+            <input type="file" name="product_image" accept="image/*" required>
+            
             <textarea name="description" placeholder="Description..." required></textarea>
             <button type="submit" style="width: 100%; padding: 12px;">Add Mushroom 🚀</button>
         </form>
