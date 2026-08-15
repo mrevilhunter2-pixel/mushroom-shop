@@ -2,6 +2,14 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import os
 
+from werkzeug.utils import secure_filename
+
+# Static Uploads Folder Setup
+UPLOAD_FOLDER = os.path.join(base_dir, 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
 base_dir = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(base_dir, 'templates')
 
@@ -185,14 +193,21 @@ def admin():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        if request.method == "POST" and "name" in request.form:
+                if request.method == "POST" and "name" in request.form:
             name = request.form.get("name")
             category = request.form.get("category", "Fresh")
             mrp = int(request.form.get("original_price"))
             discount = int(request.form.get("discount_percent", 0))
-            image_url = request.form.get("image_url")
             desc = request.form.get("description")
             final_price = int(mrp - (mrp * (discount / 100)))
+
+            # इमेज फाइल को सेव करने का कोड
+            image_file = request.files.get("product_image")
+            image_url = ""
+            if image_file and image_file.filename != "":
+                filename = secure_filename(image_file.filename)
+                image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_url = f"/static/uploads/{filename}"
 
             cursor.execute("INSERT INTO products (name, category, original_price, discount_percent, final_price, image_url, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
                            (name, category, mrp, discount, final_price, image_url, desc))
