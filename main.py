@@ -25,10 +25,9 @@ def init_db():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    cursor.execute('DROP TABLE IF EXISTS products')
-    
+    # 1. Products Table (DROP हटा दिया गया है ताकि पुराना डेटा डिलीट न हो)
     cursor.execute('''
-        CREATE TABLE products (
+        CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             category TEXT DEFAULT 'Fresh',
@@ -76,15 +75,19 @@ def init_db():
     if cursor.fetchone()[0] == 0:
         cursor.execute("INSERT INTO coupons (code, discount_flat) VALUES ('FIRST10', 10)")
 
-    sample_mushrooms = [
-        ("Button Mushroom (200g)", "Fresh", 100, 20, 80, "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400", "Fresh white button mushrooms."),
-        ("Oyster Mushroom (200g)", "Fresh", 120, 25, 90, "https://images.unsplash.com/photo-1611105943261-71e84dfa1835?w=400", "Healthy & rich in taste."),
-        ("Shiitake Mushroom (100g)", "Fresh", 200, 15, 170, "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=400", "Premium gourmet flavor.")
-    ]
-    cursor.executemany("INSERT INTO products (name, category, original_price, discount_percent, final_price, image_url, description) VALUES (?, ?, ?, ?, ?, ?, ?)", sample_mushrooms)
+    # 2. Sample Products केवल तभी जुड़ेंगे जब टेबल एकदम खाली हो
+    cursor.execute("SELECT COUNT(*) FROM products")
+    if cursor.fetchone()[0] == 0:
+        sample_mushrooms = [
+            ("Button Mushroom (200g)", "Fresh", 100, 20, 80, "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400", "Fresh white button mushrooms."),
+            ("Oyster Mushroom (200g)", "Fresh", 120, 25, 90, "https://images.unsplash.com/photo-1611105943261-71e84dfa1835?w=400", "Healthy & rich in taste."),
+            ("Shiitake Mushroom (100g)", "Fresh", 200, 15, 170, "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=400", "Premium gourmet flavor.")
+        ]
+        cursor.executemany("INSERT INTO products (name, category, original_price, discount_percent, final_price, image_url, description) VALUES (?, ?, ?, ?, ?, ?, ?)", sample_mushrooms)
 
     conn.commit()
     conn.close()
+            
 
 init_db()
 
