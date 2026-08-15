@@ -1,22 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import os
-
 from werkzeug.utils import secure_filename
 
-# Static Uploads Folder Setup
-UPLOAD_FOLDER = os.path.join(base_dir, 'static', 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-
+# 1. Base Paths & App Setup (Pehle aayega)
 base_dir = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(base_dir, 'templates')
 
 app = Flask(__name__, template_folder=template_dir)
 app.secret_key = "mushroom_super_secret_key"
-ADMIN_PASSWORD = "Ganesh1234me@711451"  # <--- यहाँ अपना मनपसंद पासवर्ड लिखें
+ADMIN_PASSWORD = "Ganesh1234me@711451"
 db_path = os.path.join(base_dir, 'mushroom_shop.db')
+
+# 2. Static Uploads Folder Setup
+UPLOAD_FOLDER = os.path.join(base_dir, 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 MY_UPI_ID = "9057430791@ybl"
 MY_SHOP_NAME = "Fresh Mushroom Store"
@@ -77,7 +76,6 @@ def init_db():
     if cursor.fetchone()[0] == 0:
         cursor.execute("INSERT INTO coupons (code, discount_flat) VALUES ('FIRST10', 10)")
 
-    # Sample Mushrooms
     sample_mushrooms = [
         ("Button Mushroom (200g)", "Fresh", 100, 20, 80, "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400", "Fresh white button mushrooms."),
         ("Oyster Mushroom (200g)", "Fresh", 120, 25, 90, "https://images.unsplash.com/photo-1611105943261-71e84dfa1835?w=400", "Healthy & rich in taste."),
@@ -183,17 +181,15 @@ def buy(product_id):
     product = cursor.fetchone()
     conn.close()
 
-    # product tuple format: (id, name, category, original_price, discount_percent, final_price, image_url, description)
     return render_template("buy.html", product=product, upi_id=MY_UPI_ID, shop_name=MY_SHOP_NAME, applied_coupon=applied_coupon, flat_discount=flat_discount)
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
-    # 1. अगर पहले से लॉग-इन है
     if session.get("is_admin"):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-                if request.method == "POST" and "name" in request.form:
+        if request.method == "POST" and "name" in request.form:
             name = request.form.get("name")
             category = request.form.get("category", "Fresh")
             mrp = int(request.form.get("original_price"))
@@ -201,7 +197,6 @@ def admin():
             desc = request.form.get("description")
             final_price = int(mrp - (mrp * (discount / 100)))
 
-            # इमेज फाइल को सेव करने का कोड
             image_file = request.files.get("product_image")
             image_url = ""
             if image_file and image_file.filename != "":
@@ -221,7 +216,6 @@ def admin():
         conn.close()
         return render_template("admin.html", products=products, coupons=coupons)
 
-    # 2. अगर पासवर्ड सबमिट किया गया है
     if request.method == "POST" and "admin_password" in request.form:
         if request.form.get("admin_password") == ADMIN_PASSWORD:
             session["is_admin"] = True
@@ -234,7 +228,6 @@ def admin():
                 </div>
             '''
 
-    # 3. पासवर्ड इनपुट फॉर्म (जब लॉग-इन न हो)
     return '''
         <div style="text-align:center; margin-top:80px; font-family:sans-serif;">
             <h2>Admin Panel Login</h2>
@@ -244,7 +237,6 @@ def admin():
             </form>
         </div>
     '''
-
 
 @app.route("/update-price/<int:product_id>", methods=["POST"])
 def update_price(product_id):
@@ -296,7 +288,6 @@ def cancel_order(order_id):
 def delete_order(order_id):
     admin_pin = request.form.get("admin_pin")
     
-    # Session लॉग-इन हो या Admin PIN सही हो, दोनों स्थिति में डिलीट होगा
     if session.get("is_admin") or admin_pin == ADMIN_PASSWORD:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
@@ -316,14 +307,12 @@ def orders():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # 1. अगर Admin लॉगिन है, तो उसको सारे ऑर्डर्स दिखेंगे
     if session.get("is_admin"):
         cursor.execute("SELECT * FROM orders ORDER BY id DESC")
         all_orders = cursor.fetchall()
         conn.close()
         return render_template("orders.html", orders=all_orders, is_admin=True)
 
-    # 2. अगर कस्टमर ने फ़ोन नंबर दिया है, तो सिर्फ उसके ऑर्डर्स दिखेंगे
     user_orders = []
     if phone_query:
         cursor.execute("SELECT * FROM orders WHERE phone = ? ORDER BY id DESC", (phone_query,))
@@ -331,8 +320,6 @@ def orders():
 
     conn.close()
     return render_template("orders.html", orders=user_orders, phone_searched=phone_query, is_admin=False)
-    
 
 if __name__ == "__main__":
     app.run(debug=True)
-    
