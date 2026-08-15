@@ -54,11 +54,13 @@
                 <option value="Online UPI / QR Code">Online UPI / QR Code</option>
             </select>
 
+            <!-- QR Code Box (बिना UTR इनपुट के) -->
             <div id="upi-section" class="payment-box">
-                <h4>Scan & Pay</h4>
-                <p>UPI ID: <b>{{ upi_id }}</b></p>
+                <h4 style="margin: 0; color: #1b5e20;">Scan & Pay via UPI</h4>
+                <p style="margin: 5px 0; font-size: 14px;">UPI ID: <b>{{ upi_id }}</b></p>
                 <img id="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa={{ upi_id }}%26pn={{ shop_name }}%26am={{ product[5] - flat_discount }}%26cu=INR" class="qr-img">
-                <input type="text" name="transaction_id" placeholder="Enter UTR / Ref No.">
+                <p style="margin: 5px 0 0; font-size: 13px; color: #555;">पेमेंट पूरा करने के बाद नीचे <b>Place Order</b> पर क्लिक करें।</p>
+                <input type="hidden" name="transaction_id" value="Paid via QR">
             </div>
 
             <button type="submit">Place Order 🚀</button>
